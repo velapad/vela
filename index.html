@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vela: Stake and Launch on Robinhood Chain</title>
+<meta name="description" content="Vela is a staking and token launchpad on Robinhood Chain. Stake VELA, launch a token on a bonding curve and trade it against USDG.">
+<meta name="theme-color" content="#000000">
+<script>(function(){var t;try{t=localStorage.getItem("vela-theme")}catch(e){}if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);document.querySelector('meta[name="theme-color"]').content=t==="dark"?"#000000":"#ffffff"})()</script>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="icon" type="image/png" href="/favicon.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Vela"><meta property="og:title" content="Vela: Stake, launch and trade on Robinhood Chain"><meta property="og:description" content="Vela is a staking and token launchpad on Robinhood Chain. Stake VELA, launch a token on a bonding curve and trade it against USDG."><meta property="og:url" content="https://vela-pad.xyz/"><meta property="og:image" content="https://vela-pad.xyz/og-image.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:site" content="@VelaonRH"><meta name="twitter:title" content="Vela: Stake, launch and trade on Robinhood Chain"><meta name="twitter:description" content="Vela is a staking and token launchpad on Robinhood Chain. Stake VELA, launch a token on a bonding curve and trade it against USDG."><meta name="twitter:image" content="https://vela-pad.xyz/og-image.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#fff;--card:#f5f7f6;--tx:#0b0f0d;--mu:#6b7770;--ln:#e3e8e5;--gr:#00a800;--grb:#00c805;--rd:#e5484d}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#000;--card:#111514;--tx:#f2f5f3;--mu:#8a968f;--ln:#212826;--gr:#00c805}}
+:root[data-theme="dark"]{--bg:#000;--card:#111514;--tx:#f2f5f3;--mu:#8a968f;--ln:#212826;--gr:#00c805}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*:before,*:after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:Inter,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.4}
+main{max-width:560px;margin:0 auto;padding:16px 18px 48px}
+header{display:flex;justify-content:space-between;align-items:center;padding:8px 0 16px}
+.logo{font-weight:800;font-size:22px;letter-spacing:-.5px;display:flex;align-items:center;gap:8px}
+.logo svg{width:26px;height:26px;display:block}
+.logo .lf{fill:var(--grb)}
+.logo .lv{fill:none;stroke:var(--bg);stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.xb.th{cursor:pointer;padding:0;font:inherit}
+.xb.th svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+:root[data-theme="dark"] .th .mo,:root:not([data-theme="dark"]) .th .su{display:none}
+.pill{background:var(--card);border:1px solid var(--ln);border-radius:99px;padding:8px 14px;font:inherit;font-size:13px;font-weight:600;color:var(--tx);cursor:pointer}
+.mu{color:var(--mu);font-size:13px}
+.big{font-size:40px;font-weight:700;letter-spacing:-1.5px;margin:2px 0}
+.up{color:var(--gr);font-weight:600;font-size:14px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.stats div{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:10px 14px}
+.stats b{display:block;font-size:17px}
+.tabs{display:flex;gap:8px;margin-top:18px}
+.tabs button{flex:1;border:1.5px solid var(--ln);background:var(--bg);color:var(--mu);border-radius:99px;padding:10px;font:inherit;font-weight:700;cursor:pointer}
+.tabs button.on{background:var(--grb);border-color:var(--grb);color:#000}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:18px;padding:18px;margin-top:14px}
+h2{font-size:18px;margin:0 0 12px;letter-spacing:-.3px}
+.pools{display:grid;gap:8px;margin-bottom:14px}
+.pool{border:1.5px solid var(--ln);border-radius:14px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:var(--bg);color:var(--tx);font:inherit;text-align:left;width:100%}
+.pool.on{border-color:var(--grb)}
+.pool b{display:block;font-size:15px}
+.apr{font-weight:700;color:var(--gr);font-size:18px}
+.field{display:flex;align-items:center;background:var(--bg);border:1.5px solid var(--ln);border-radius:14px;padding:2px 14px;margin-bottom:10px}
+.field input{flex:1;background:none;border:0;color:var(--tx);font:inherit;font-size:18px;font-weight:600;padding:12px 0;width:100%;outline:none}
+.field button{background:none;border:0;color:var(--gr);font-weight:700;cursor:pointer}
+label{font-size:13px;color:var(--mu);display:block;margin:0 0 4px 2px}
+.btn{width:100%;border:0;border-radius:99px;background:var(--grb);color:#000;font:inherit;font-weight:700;font-size:16px;padding:15px;margin-top:6px;cursor:pointer}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.s{background:var(--bg);color:var(--tx);border:1.5px solid var(--ln);padding:8px 16px;width:auto;font-size:13px;margin:0}
+.pos{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid var(--ln);gap:10px}
+.pos:first-child{border-top:0}
+.msg{min-height:20px;font-size:13px;color:var(--mu);margin-top:10px;text-align:center;word-break:break-word}
+.warn{display:none;background:rgba(229,72,77,.12);border:1px solid var(--rd);border-radius:14px;padding:12px 14px;font-size:13px;margin-bottom:12px}
+.hide{display:none}
+a{color:var(--gr);font-weight:600}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+.modal.on{display:flex}
+.modal>div{background:var(--bg);border:1px solid var(--ln);border-radius:20px;padding:18px;width:100%;max-width:360px}
+.w{display:flex;align-items:center;gap:12px;width:100%;background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:12px;margin-top:8px;font:inherit;font-weight:600;color:var(--tx);cursor:pointer}
+.w img{width:28px;height:28px;border-radius:7px}
+.foot{font-size:12px;color:var(--mu);margin-top:24px;text-align:center}
+body{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+.bnav{position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;justify-content:center;background:var(--bg);border-top:1px solid var(--ln);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+.bnav>div{display:flex;width:100%;max-width:560px}
+.xb{width:36px;height:36px;border-radius:50%;background:var(--card);border:1px solid var(--ln);display:flex;align-items:center;justify-content:center;color:var(--tx)}
+.xb svg{width:16px;height:16px;fill:currentColor}
+.ca{display:block;width:100%;margin:0 0 14px;background:var(--card);border:1px solid var(--ln);border-radius:99px;padding:10px 14px;font:inherit;font-size:13px;font-weight:600;color:var(--mu);text-align:center;cursor:default;word-break:break-all}
+.ca.on{color:var(--tx);cursor:pointer;border-color:var(--grb)}
+details.fq{border-top:1px solid var(--ln);padding:12px 0}details.fq:first-of-type{border-top:0}
+details.fq summary{cursor:pointer;font-weight:700;font-size:15px;list-style:none}details.fq summary::-webkit-details-marker{display:none}
+details.fq summary:after{content:"+";float:right;color:var(--gr)}details.fq[open] summary:after{content:"\2013"}
+details.fq .mu{margin-top:8px;font-size:14px;line-height:1.55}
+.bnav button{flex:1;background:none;border:0;color:var(--mu);font:inherit;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;cursor:pointer}
+.bnav button.on{color:var(--gr)}
+.bnav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+</style>
+</head>
+<body>
+<main>
+<header><div class="logo"><svg viewBox="0 0 48 48" aria-hidden="true"><path class="lf" d="M7 0H24A24 24 0 0 1 48 24V41A7 7 0 0 1 41 48H24A24 24 0 0 1 0 24V7A7 7 0 0 1 7 0Z"/><path class="lv" d="M12 15.5L24 34.5L36 15.5"/></svg>vela</div><div style="display:flex;align-items:center;gap:10px"><button class="xb th" id="th" type="button" aria-label="Switch to dark mode"><svg class="mo" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="su" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button><a class="xb" id="fx" href="https://x.com/VelaonRH" target="_blank" rel="noopener" aria-label="Vela on X"><svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a><button class="pill" id="cn">Connect wallet</button></div></header>
+<button class="ca" id="fca" type="button">CA: 0x49aa33d8df16d88adfa97ab2af395bddf10f814e</button>
+
+
+
+<div class="mu">Staked + rewards</div>
+<div class="big" id="tot">0 VELA</div>
+<div class="up" id="rw">+0 VELA rewards</div>
+<div class="stats"><div><span class="mu">ETH (gas)</span><b id="eth">0</b></div><div><span class="mu">VELA in wallet</span><b id="vb">0</b></div></div>
+
+
+
+<div id="p-explore">
+<div class="mu" style="margin-top:14px">Stake, launch and trade tokens on Robinhood Chain.</div>
+<section class="card" style="margin-top:8px"><h2>Explore tokens</h2>
+<div class="tabs" id="ef" style="margin-top:0"><button class="on" data-f="all">All</button><button data-f="mine">My launches</button></div>
+<div id="ex" style="margin-top:8px"><div class="mu">Loading…</div></div></section>
+</div>
+<div id="p-stake" class="hide">
+<section class="card">
+<h2>Stake VELA</h2>
+<div class="pools" id="pools"></div>
+<div class="field"><input id="amt" type="number" inputmode="decimal" placeholder="0.0" min="0"><button id="max">MAX</button></div>
+<button class="btn" id="go">Connect wallet</button>
+</section>
+<section class="card"><h2>Projected rewards</h2><svg id="pc" viewBox="0 0 300 120" style="width:100%;height:140px;display:block"></svg><div class="mu" id="pcap"></div></section>
+<section class="card"><h2>Your positions</h2><div id="positions"><div class="mu">Connect your wallet to see positions.</div></div></section>
+</div>
+
+<div id="p-launch" class="hide">
+<section class="card">
+<h2>Launch a token</h2>
+<label>Token name</label><div class="field"><input id="tn" maxlength="32" placeholder="Vela Cat"></div>
+<label>Symbol</label><div class="field"><input id="ts" maxlength="11" placeholder="VCAT"></div>
+<label>Logo (optional)</label>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px"><img id="tlp" alt="" style="width:56px;height:56px;border-radius:14px;border:1px solid var(--ln);object-fit:cover;display:none"><button class="btn s" type="button" id="tbtn">Upload image</button><input id="tfile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none"><span class="mu" id="tfs">PNG, JPG or WebP. Resized to 160 px and stored on-chain.</span></div>
+<label>Description (optional)</label><div class="field"><input id="tdesc" maxlength="280" placeholder="What is this token about?"></div>
+<label>First buy in USDG (optional)</label><div class="field"><input id="tsup" type="number" inputmode="decimal" placeholder="0"></div><div class="mu">Supply is fixed at 1,000,000,000. The token trades on a bonding curve and moves to the Vela DEX at about $42k market cap.</div>
+<div class="mu" id="fee">Creation fee: shown at launch</div>
+<button class="btn" id="mk">Connect wallet</button>
+<div id="res"></div>
+</section>
+<section class="card"><h2>Recently launched</h2><div id="recent"><div class="mu">Nothing yet.</div></div></section>
+<section class="card"><h2>Creator earnings</h2><div class="mu" id="ce">Connect your wallet to see earnings. Creators earn 0.60% of every USDG trade in tokens they launch.</div><button class="btn s" id="cc" style="margin-top:10px" disabled>Claim USDG</button></section>
+</div>
+
+<div id="p-liq" class="hide">
+<section class="card"><h2>Pool</h2><label>Token address</label><div class="field"><input id="lt" placeholder="0x…"></div><div id="tm"></div><div class="mu" id="lp">Enter a token address to load its USDG pool.</div><div id="cvw" class="hide" style="margin-top:10px"><div style="height:10px;background:var(--ln);border-radius:99px;overflow:hidden"><div id="cvb" style="height:100%;width:0;background:var(--grb)"></div></div><div class="mu" id="cvt" style="margin-top:6px"></div></div></section>
+<section class="card"><h2>Swap</h2><div class="tabs" id="sd"><button class="on" data-d="buy">USDG → Token</button><button data-d="sell">Token → USDG</button></div><div class="field" style="margin-top:12px"><input id="sa" type="number" inputmode="decimal" placeholder="0.0"></div><div class="mu" id="sq">You receive: 0</div><button class="btn" id="sw">Connect wallet</button></section>
+<section class="card"><h2>Add liquidity</h2><label>USDG amount</label><div class="field"><input id="ae" type="number" inputmode="decimal" placeholder="0.0"></div><label>Token amount (the most you will deposit)</label><div class="field"><input id="at" type="number" inputmode="decimal" placeholder="0.0"></div><div class="mu" id="aq">The first deposit sets the starting price. Later deposits follow the pool ratio.</div><button class="btn" id="ad">Connect wallet</button></section>
+<section class="card"><h2>Your liquidity</h2><div id="ly"><div class="mu">Connect your wallet and load a pool.</div></div></section>
+</div>
+<div id="p-pf" class="hide">
+<section class="card"><h2>Portfolio</h2><div id="pf"><div class="mu">Connect your wallet to see your portfolio.</div></div></section>
+<section class="card"><h2>Shortcuts</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn s" id="pl">My launches</button><button class="btn s" id="pcl">Claim creator fees</button></div></section>
+</div>
+<div id="p-stats" class="hide"><section class="card"><h2>Platform stats</h2><div id="st"><div class="mu">Loading…</div></div></section><section class="card"><h2>Top tokens</h2><div class="mu" style="margin-bottom:6px">By market cap, among the latest 50 launches</div><div id="stt"></div></section><section class="card"><h2>Top creators</h2><div class="mu" style="margin-bottom:6px">Most graduated launches, among the latest 50</div><div id="stc"></div></section></div><div id="p-docs" class="hide"><section class="card"><h2>Docs and FAQ</h2><details class="fq"><summary>What is Vela?</summary><div class="mu">Vela is a staking and token launchpad on Robinhood Chain. You can stake VELA for rewards, launch a token in one transaction, and trade it from your own wallet.</div></details><details class="fq"><summary>Which wallets work?</summary><div class="mu">Any EVM wallet, such as MetaMask or Trust Wallet. Open Vela in your wallet’s browser and tap Connect wallet. Robinhood Chain (chain ID 4663) is added for you.</div></details><details class="fq"><summary>How does staking work?</summary><div class="mu">Pick a pool (Flex, 30 days or 90 days), enter an amount and confirm. The APR is locked when you stake. When the lock ends, tap Unstake to receive your VELA plus rewards.</div></details><details class="fq"><summary>How does a launch work?</summary><div class="mu">Every token has a fixed supply of 1 billion. 800 million are sold on a bonding curve and 200 million are kept for liquidity. The price rises as people buy and falls as they sell.</div></details><details class="fq"><summary>What is graduation?</summary><div class="mu">When all 800 million curve tokens are sold, at about a $42,000 market cap, the token moves to the Vela DEX automatically. The raised USDG and the 200 million tokens become the first liquidity, and that liquidity is locked.</div></details><details class="fq"><summary>What are the fees?</summary><div class="mu">On the curve the fee is 1% (0.60% to the creator, 0.40% to the Vela treasury). After graduation the fee is 1%: 0.60% creator, 0.30% liquidity providers and 0.10% treasury. Tokens launched elsewhere pay only the 0.30% liquidity fee. Fees are shown before you confirm.</div></details><details class="fq"><summary>Can I sell before a token graduates?</summary><div class="mu">Yes. You can sell back to the curve at any time. Until a token graduates it can only be traded with the curve, not sent between wallets.</div></details><details class="fq"><summary>How do creators earn?</summary><div class="mu">Creators earn 0.60% of every USDG trade in their token. Open Launch and use Creator earnings to claim it in USDG.</div></details><details class="fq"><summary>How do liquidity providers earn?</summary><div class="mu">Providers earn 0.30% of every trade in the pool, paid in USDG. Open Trade, load a graduated token and tap Claim fees at any time.</div></details><details class="fq"><summary>Where can I verify the contracts?</summary><div class="mu">Every Vela contract is listed on the About page with a link to the Robinhood Chain explorer.</div></details></section></div><div id="p-legal" class="hide"><section class="card"><h2>Terms of Use</h2><div class="mu" style="margin-bottom:6px">Last updated October 20, 2026</div><details class="fq"><summary>1. Using Vela</summary><div class="mu">Vela is a non-custodial interface to smart contracts on Robinhood Chain. You connect your own wallet and you are responsible for your keys and your transactions. Blockchain transactions are final and cannot be reversed.</div></details><details class="fq"><summary>2. Eligibility</summary><div class="mu">You must be allowed by the laws where you live to use crypto services. You are responsible for following your local rules. Do not use Vela if you are restricted or sanctioned.</div></details><details class="fq"><summary>3. Risks</summary><div class="mu">Smart contracts can contain bugs, and Vela’s contracts have not been independently audited yet. Token prices can fall to zero. Only use funds you can afford to lose.</div></details><details class="fq"><summary>4. Tokens and content</summary><div class="mu">Anyone can launch a token. Names, logos and descriptions are created by third parties, and Vela does not verify or endorse them. Content published on-chain cannot be deleted, although Vela may hide it on this site. Do not upload illegal, infringing or abusive content.</div></details><details class="fq"><summary>5. Fees</summary><div class="mu">Fees are set by the smart contracts, described in the Docs, and shown before you confirm a transaction.</div></details><details class="fq"><summary>6. No advice</summary><div class="mu">Information on Vela is not financial, legal or tax advice.</div></details><details class="fq"><summary>7. No warranty</summary><div class="mu">Vela is provided as is. To the extent permitted by law, Vela and its contributors are not liable for losses from using the site or the contracts.</div></details><details class="fq"><summary>8. Changes</summary><div class="mu">These terms may be updated from time to time. Continuing to use Vela means you accept the latest version. Vela is not affiliated with Robinhood.</div></details></section><section class="card"><h2>Privacy Policy</h2><details class="fq"><summary>What we collect</summary><div class="mu">Vela has no accounts and does not collect your name, email or other personal data.</div></details><details class="fq"><summary>On-chain data</summary><div class="mu">Your wallet address and transactions are public on the blockchain. Vela reads them to show your balances, positions and activity.</div></details><details class="fq"><summary>Third parties</summary><div class="mu">This site does not use analytics or advertising trackers. It loads a script library from cdnjs.cloudflare.com and connects to Robinhood Chain’s public RPC, so those providers may see your IP address, as with any website. Your wallet app has its own privacy policy.</div></details><details class="fq"><summary>Launch content</summary><div class="mu">Logos and descriptions added when launching a token are published on-chain and are public permanently.</div></details><details class="fq"><summary>Contact</summary><div class="mu">Questions? Reach out to us on <a href="https://x.com/VelaonRH" target="_blank" rel="noopener">X</a>.</div></details></section></div><div id="p-token" class="hide"><section class="card" id="tkc"><div class="mu">Pick a token from Explore.</div></section></div>
+<div id="p-info" class="hide">
+<section class="card"><h2>About Vela</h2><div class="mu" style="font-size:14px;line-height:1.55">Vela is a staking and token launchpad on Robinhood Chain. Stake VELA to earn APR rewards, launch a fixed-supply token in one transaction, and trade it against USDG. Creators earn 0.60% of every trade in their token, and everything runs from your own wallet. Vela never holds your funds.</div></section>
+<section class="card"><h2>How Vela works</h2>
+<div class="pos"><div><b>1. Launch</b><div class="mu">Create a token with a fixed 1 billion supply. It trades on a bonding curve from the first block.</div></div></div>
+<div class="pos"><div><b>2. Graduate</b><div class="mu">At about $42k market cap the token moves to the Vela DEX automatically, and its liquidity is locked.</div></div></div>
+<div class="pos"><div><b>3. Earn</b><div class="mu">Creators earn 0.60% of every trade in their token. Stake VELA to earn APR rewards.</div></div></div></section>
+<section class="card"><h2>Fees</h2>
+<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:14px"><span class="mu">Total swap fee (launched tokens)</span><b>1.00%</b></div>
+<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:14px"><span class="mu">Token creator</span><b>0.60%</b></div>
+<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:14px"><span class="mu">Liquidity providers</span><b>0.30%</b></div>
+<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:14px"><span class="mu">Vela treasury</span><b>0.10%</b></div>
+<div class="mu">Tokens launched elsewhere pay only the 0.30% liquidity fee. Liquidity providers claim their 0.30% in USDG at any time.</div></section>
+<section class="card"><h2>Network and contracts</h2>
+<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:14px"><span class="mu">Network</span><b>Robinhood Chain (4663)</b></div>
+<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:14px"><span class="mu">Explorer</span><a href="https://robinhoodchain.blockscout.com" target="_blank" rel="noopener">Blockscout</a></div>
+<div id="ci"></div></section>
+<section class="card"><h2>Built for transparency</h2>
+<div class="pos"><div><b>✓ Non-custodial</b><div class="mu">You trade from your own wallet. Vela never holds your keys or your funds.</div></div></div>
+<div class="pos"><div><b>✓ Open contracts</b><div class="mu">Every Vela contract is public and can be verified on the Robinhood Chain explorer.</div></div></div>
+<div class="pos"><div><b>✓ Locked liquidity</b><div class="mu">When a token graduates from the bonding curve, its liquidity is locked in the Vela DEX.</div></div></div>
+<div class="pos"><div><b>✓ Fixed supply</b><div class="mu">Every launched token has a fixed 1 billion supply. Nothing can be minted after launch.</div></div></div>
+<div class="mu" style="font-size:12px;margin-top:10px">Vela is new on Robinhood Chain mainnet and its contracts have not been independently audited yet, so it is always worth checking a token before you buy. Not financial advice. Vela is not affiliated with Robinhood.</div></section>
+</div>
+<div class="msg" id="msg"></div>
+<footer class="foot">© 2026 Vela · Built on Robinhood Chain<div style="margin-top:6px"><a href="#" id="fa">About</a> · <a href="#" data-go="stats">Stats</a> · <a href="#" data-go="docs">Docs</a> · <a href="#" data-go="legal">Terms</a> · <a href="https://robinhoodchain.blockscout.com" target="_blank" rel="noopener">Explorer</a></div></footer>
+</main>
+
+<nav class="bnav"><div>
+<button class="on" data-t="explore"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></svg>Explore</button>
+<button data-t="stake"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>Stake</button>
+<button data-t="launch"><svg viewBox="0 0 24 24"><path d="M12 3c3 2 5 5 5 9l-5 4-5-4c0-4 2-7 5-9z"/><circle cx="12" cy="10" r="1.5"/><path d="M8 18l-2 3M16 18l2 3"/></svg>Launch</button>
+<button data-t="liquidity"><svg viewBox="0 0 24 24"><path d="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/></svg>Trade</button>
+<button data-t="portfolio"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M16 14.5h2"/></svg>Portfolio</button>
+<button data-t="info" style="display:none"></button><button data-t="stats" style="display:none"></button><button data-t="docs" style="display:none"></button><button data-t="legal" style="display:none"></button><button data-t="token" style="display:none"></button>
+</div></nav>
+<div class="modal" id="md"><div><h2>Choose a wallet</h2><div id="wl"></div><button class="btn s" id="mc" style="margin-top:12px">Cancel</button></div></div>
+
+<script>
+(function(){var r=document.documentElement,b=document.getElementById("th"),m=document.querySelector('meta[name="theme-color"]');function set(t,save){r.setAttribute("data-theme",t);m.content=t==="dark"?"#000000":"#ffffff";b.setAttribute("aria-label",t==="dark"?"Switch to light mode":"Switch to dark mode");if(save)try{localStorage.setItem("vela-theme",t)}catch(e){}}set(r.getAttribute("data-theme"));b.onclick=function(){set(r.getAttribute("data-theme")==="dark"?"light":"dark",1)};matchMedia("(prefers-color-scheme: dark)").addEventListener("change",function(e){var t;try{t=localStorage.getItem("vela-theme")}catch(x){}if(!t)set(e.matches?"dark":"light")})})();
+var C={VELA:"",STAKING:"",FACTORY:"",DEX:"",USDG:"0x5fc5360d0400a0fd4f2af552add042d716f1d168"};
+var CH={hex:"0x1237",rpc:"https://rpc.mainnet.chain.robinhood.com",ex:"https://robinhoodchain.blockscout.com"};
+var ERC=["function balanceOf(address) view returns (uint256)","function allowance(address,address) view returns (uint256)","function approve(address,uint256) returns (bool)"];
+var STK=["function pools(uint256) view returns (uint32 lockDays,uint16 aprBps)","function stakes(uint8,address) view returns (uint128 amount,uint128 owed,uint64 since,uint64 unlock,uint16 apr)","function pending(uint8,address) view returns (uint256)","function stake(uint8,uint128)","function unstake(uint8)"];
+var FAC=["function fee() view returns (uint256)","function createToken(string,string,string,uint256) payable returns (address)","function createdBlock(address) view returns (uint256)","function curves(address) view returns (uint256 vQ,uint256 vT,uint256 sold,bool graduated)","function previewBuy(address,uint256) view returns (uint256 out,uint256 spend)","function previewSell(address,uint256) view returns (uint256)","function buy(address,uint256,uint256)","function sell(address,uint256,uint256)","function fees(address) view returns (uint256)","function claimFees()","function volume(address) view returns (uint256)","function tokenCount() view returns (uint256)","function tokens(uint256) view returns (address)","function tokensOf(address) view returns (address[])","function creatorOf(address) view returns (address)","function graduatedCount() view returns (uint256)","function totalVolume() view returns (uint256)","event Trade(address indexed token,address indexed who,bool isBuy,uint256 quoteAmt,uint256 tokenAmt)","event TokenCreated(address indexed creator,address indexed token,string name,string symbol)","event TokenMeta(address indexed token,string meta)"];
+var NAMES=["Flex","30 days","90 days"];
+var $=function(i){return document.getElementById(i)},U=ethers.utils;
+var ro=new ethers.providers.JsonRpcProvider(CH.rpc,{chainId:4663,name:"robinhood"});
+var prov,signer,addr,sel=0,wallets=[],busy=false,pd=[null,null,null],vbal=ethers.constants.Zero,fee=null;
+var ok=function(a){return U.isAddress(a)};
+var f=function(v,d){return Number(U.formatUnits(v,18)).toLocaleString("en-US",{maximumFractionDigits:d===undefined?4:d})};
+var esc=function(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
+function toast(t,e){var m=$("msg");m.textContent=t;m.style.color=e?"var(--rd)":"var(--mu)"}
+function er(e){if(e&&(e.code===4001||e.code==="ACTION_REJECTED"))return "Rejected in wallet.";var m=e&&(e.reason||(e.error&&e.error.message)||e.message)||"Something went wrong.";return m.slice(0,160)}
+async function run(fn){if(busy)return;busy=true;try{await fn()}catch(e){toast(er(e),1)}busy=false}
+
+window.addEventListener("eip6963:announceProvider",function(e){var d=e.detail;if(!wallets.some(function(w){return w.info.uuid===d.info.uuid}))wallets.push(d)});
+window.dispatchEvent(new Event("eip6963:requestProvider"));
+
+async function ensureChain(eth){
+  try{await eth.request({method:"wallet_switchEthereumChain",params:[{chainId:CH.hex}]})}
+  catch(e){
+    if(e.code===4902||/unrecognized|not added|add the chain/i.test(e.message||"")){
+      await eth.request({method:"wallet_addEthereumChain",params:[{chainId:CH.hex,chainName:"Robinhood Chain",nativeCurrency:{name:"Ether",symbol:"ETH",decimals:18},rpcUrls:[CH.rpc],blockExplorerUrls:[CH.ex]}]});
+    }else throw e;
+  }
+}
+async function connect(eth){
+  $("md").classList.remove("on");
+  await run(async function(){
+    var a=await eth.request({method:"eth_requestAccounts"});
+    await ensureChain(eth);
+    prov=new ethers.providers.Web3Provider(eth);signer=prov.getSigner();addr=a[0];
+    if(eth.on){eth.on("accountsChanged",function(){location.reload()});eth.on("chainChanged",function(){location.reload()})}
+    $("cn").textContent=addr.slice(0,6)+"…"+addr.slice(-4);
+    toast("");await load();
+  });
+}
+$("cn").onclick=function(){
+  if(addr)return;
+  var list=wallets.slice();
+  if(!list.length&&window.ethereum)return connect(window.ethereum);
+  if(!list.length)return toast("No wallet found. Install MetaMask, or open this page inside the Trust Wallet browser.",1);
+  if(list.length===1)return connect(list[0].provider);
+  $("wl").innerHTML=list.map(function(w,i){return '<button class="w" data-w="'+i+'"><img alt="" src="'+esc(w.info.icon)+'">'+esc(w.info.name)+'</button>'}).join("");
+  $("md").classList.add("on");
+};
+$("wl").onclick=function(e){var b=e.target.closest(".w");if(b)connect(wallets[+b.dataset.w].provider)};
+$("mc").onclick=function(){$("md").classList.remove("on")};
+
+function renderPools(){setTimeout(drawChart,0);
+  $("pools").innerHTML=[0,1,2].map(function(i){var p=pd[i];
+    return '<button class="pool'+(i===sel?' on':'')+'" data-i="'+i+'"><span><b>'+NAMES[i]+'</b><span class="mu">'+(p?(p.lockDays?"Locked "+p.lockDays+" days":"No lock"):"Pool "+(i+1))+'</span></span><span class="apr">'+(p?(p.aprBps/100).toFixed(1)+"%":"—")+'</span></button>'}).join("");
+}
+async function load(){
+  var rp=prov||ro,st=ok(C.STAKING)?new ethers.Contract(C.STAKING,STK,rp):null;
+  
+  try{if(st)for(var i=0;i<3;i++)pd[i]=await st.pools(i)}catch(e){}
+  renderPools();
+  try{if(ok(C.FACTORY)){fee=await new ethers.Contract(C.FACTORY,FAC,rp).fee();$("fee").textContent="Creation fee: "+f(fee,6)+" ETH + network gas"}}catch(e){}
+  $("go").textContent=addr?"Stake":"Connect wallet";$("mk").textContent=addr?"Create token":"Connect wallet";$("sw").textContent=addr?"Swap":"Connect wallet";$("ad").textContent=addr?"Add liquidity":"Connect wallet";
+  if(!addr)return;
+  var tot=ethers.constants.Zero,rw=ethers.constants.Zero,html="";
+  $("eth").textContent=f(await rp.getBalance(addr),5);
+  if(ok(C.VELA)){vbal=await new ethers.Contract(C.VELA,ERC,rp).balanceOf(addr);$("vb").textContent=f(vbal,2)}
+  if(st)for(var j=0;j<3;j++){
+    var s=await st.stakes(j,addr);if(s.amount.eq(0)&&s.owed.eq(0))continue;
+    var pe=await st.pending(j,addr),locked=Date.now()/1000<s.unlock.toNumber();
+    tot=tot.add(s.amount).add(pe);rw=rw.add(pe);
+    html+='<div class="pos"><div><b>'+NAMES[j]+'</b><div class="mu">'+f(s.amount,2)+' VELA'+(locked?" · unlocks "+new Date(s.unlock.toNumber()*1000).toLocaleDateString("en-US"):"")+'</div></div><div style="text-align:right"><div class="up">+'+f(pe,4)+'</div><button class="btn s" data-u="'+j+'"'+(locked?" disabled":"")+'>Unstake</button></div></div>';
+  }
+  gTot=tot;gRw=rw;$("tot").textContent=f(tot,2)+" VELA";$("rw").textContent="+"+f(rw,4)+" VELA rewards";
+  $("positions").innerHTML=html||'<div class="mu">No active stakes.</div>';earn();
+}
+async function need(){if(!addr)throw new Error("Connect your wallet first.");if(!ok(C.VELA)||!ok(C.STAKING)||!ok(C.FACTORY)||!ok(C.DEX))throw new Error("Vela is launching soon. The contracts go live shortly.")}
+$("go").onclick=function(){if(!addr)return $("cn").click();run(async function(){
+  await need();var v=U.parseUnits($("amt").value||"0",18);if(v.lte(0))throw new Error("Enter an amount.");if(v.gt(vbal))throw new Error("Not enough VELA.");
+  var t=new ethers.Contract(C.VELA,ERC,signer),s=new ethers.Contract(C.STAKING,STK,signer);
+  if((await t.allowance(addr,C.STAKING)).lt(v)){toast("Approve VELA in your wallet…");await(await t.approve(C.STAKING,v)).wait()}
+  toast("Confirm the stake in your wallet…");await(await s.stake(sel,v)).wait();
+  $("amt").value="";toast("Staked successfully.");await load();
+})};
+$("positions").onclick=function(e){var j=e.target.dataset.u;if(j===undefined)return;run(async function(){
+  toast("Confirm unstake in your wallet…");await(await new ethers.Contract(C.STAKING,STK,signer).unstake(+j)).wait();toast("Unstaked. Funds and rewards sent to your wallet.");await load();
+})};
+$("pools").onclick=function(e){var b=e.target.closest(".pool");if(!b)return;sel=+b.dataset.i;renderPools()};
+$("max").onclick=function(){$("amt").value=U.formatUnits(vbal,18);drawChart()};$("amt").oninput=drawChart;
+
+$("mk").onclick=function(){if(!addr)return $("cn").click();run(async function(){
+  await need();qd=await new ethers.Contract(C.USDG,T2,ro).decimals();var n=$("tn").value.trim(),s=$("ts").value.trim().toUpperCase(),sup=amt("tsup");
+  if(!n||!s)throw new Error("Enter a name and symbol.");if(sup.gt(0))await apx(C.USDG,C.FACTORY,sup);
+  var fa=new ethers.Contract(C.FACTORY,FAC,signer);if(fee===null)fee=await fa.fee();
+  toast("Confirm token creation in your wallet…");var r=await(await fa.createToken(n,s,JSON.stringify({description:$("tdesc").value.trim(),image:logoData}),sup,{value:fee})).wait();
+  var ev=r.events.filter(function(x){return x.event==="TokenCreated"})[0],t=ev.args.token;
+  $("res").innerHTML='<div class="card" style="background:var(--bg)"><b>'+esc(n)+' ('+esc(s)+') is live</b><div class="mu" style="word-break:break-all">'+t+'</div><a href="'+CH.ex+'/token/'+t+'" target="_blank" rel="noopener">View on explorer</a> · <a href="#" id="aw">Add to wallet</a> · <a href="#" id="al">Trade token</a></div>';
+  $("aw").onclick=function(x){x.preventDefault();prov.provider.request({method:"wallet_watchAsset",params:{type:"ERC20",options:{address:t,symbol:s.slice(0,11),decimals:18}}}).catch(function(){})};
+  $("al").onclick=function(x){x.preventDefault();$("lt").value=t;document.querySelector('[data-t="liquidity"]').click();run(loadPool)};toast("Token created.");logoData="";$("tlp").style.display="none";$("tdesc").value="";recent();
+})};
+async function recent(){if(!ok(C.FACTORY))return;try{var l=await listTokens(8);if(l.length)$("recent").innerHTML=l.map(function(x){return '<div class="pos"><div><b>'+esc(x.name)+'</b> <span class="mu">'+esc(x.symbol)+'</span></div><a href="'+CH.ex+'/token/'+x.token+'" target="_blank" rel="noopener">View</a></div>'}).join("")}catch(e){}}
+document.querySelector(".bnav").onclick=function(e){var bb=e.target.closest("button");if(!bb)return;var t=bb.dataset.t;if(!t)return;window.scrollTo(0,0);
+  document.querySelectorAll(".bnav button").forEach(function(b){b.classList.toggle("on",b===bb)});
+  var PN={explore:"p-explore",stake:"p-stake",launch:"p-launch",liquidity:"p-liq",portfolio:"p-pf",info:"p-info",stats:"p-stats",docs:"p-docs",legal:"p-legal",token:"p-token"};Object.keys(PN).forEach(function(k){$(PN[k]).classList.toggle("hide",k!==t)});if(t==="explore")explore();if(t==="portfolio")renderPortfolio();if(t==="stats")renderStats()};
+
+var DEXA=["function pools(address) view returns (uint256 rQ,uint256 rTok,uint256 total)","function shares(address,address) view returns (uint256)","function addLiquidity(address,uint256,uint256,uint256)","function removeLiquidity(address,uint256,uint256,uint256)","function swapQuoteForTokens(address,uint256,uint256)","function creatorFeeBps(address) view returns (uint256)","function creatorFees(address) view returns (uint256)","function claimCreatorFees()","function pendingFees(address,address) view returns (uint256)","function claimLpFees(address)","event Swap(address indexed token,address indexed who,bool quoteIn,uint256 amtIn,uint256 amtOut)","function swapTokensForQ(address,uint256,uint256)"];
+var T2=ERC.concat(["function symbol() view returns (string)","function decimals() view returns (uint8)"]);
+var dir="buy",lp=null,tk="",sym="TOKEN",qd=6,cfb=ethers.constants.Zero,cv=null;
+function out(i,ri,r2){return i.mul(9970).mul(r2).div(ri.mul(10000).add(i.mul(9970)))}
+function calc(v,b){var fb=cfb.add(30);if(b){var n=v.sub(v.mul(fb).div(10000));return n.mul(lp.rTok).div(lp.rQ.add(n))}var g=v.mul(lp.rQ).div(lp.rTok.add(v));return g.sub(g.mul(fb).div(10000))}
+var fq=function(v,d){return Number(U.formatUnits(v,qd)).toLocaleString("en-US",{maximumFractionDigits:d})};
+async function ap(a,v){var t=new ethers.Contract(a,T2,signer);if((await t.allowance(addr,C.DEX)).lt(v)){toast("Approve USDG in your wallet…");await(await t.approve(C.DEX,v)).wait()}}
+function amt(id){var d=(id==="ae"||id==="tsup"||(id==="sa"&&dir==="buy"))?qd:18;try{return U.parseUnits($(id).value||"0",d)}catch(e){return ethers.constants.Zero}}
+async function loadPool(){
+  tk=$("lt").value.trim();lp=null;
+  if(!ok(tk)||!ok(C.DEX)){$("lp").textContent=ok(C.DEX)?"Enter a valid token address.":"DEX contract is not configured yet.";return}
+  var rp=prov||ro,d=new ethers.Contract(C.DEX,DEXA,rp);
+  try{sym=await new ethers.Contract(tk,T2,ro).symbol()}catch(e){sym="TOKEN"}
+  lp=await d.pools(tk);qd=await new ethers.Contract(C.USDG,T2,ro).decimals();loadMeta();cfb=await d.creatorFeeBps(tk);cv=null;try{if(ok(C.FACTORY)){var cs=await new ethers.Contract(C.FACTORY,FAC,rp).curves(tk);if(cs.vT.gt(0))cv=cs}}catch(e){}$("cvw").classList.toggle("hide",!(cv&&!cv.graduated));if(cv&&!cv.graduated)drawCurve();
+  $("lp").textContent=(cv&&!cv.graduated)?curveText():lp.total.eq(0)?"No pool yet. Add liquidity to create it.":"Reserves: "+fq(lp.rQ,2)+" USDG / "+f(lp.rTok,2)+" "+sym+" · price "+(Number(U.formatUnits(lp.rQ,qd))/Number(U.formatUnits(lp.rTok,18))).toPrecision(4)+" USDG";
+  $("ly").innerHTML='<div class="mu">No liquidity position.</div>';
+  if(addr&&lp.total.gt(0)){var sh=await d.shares(tk,addr),pf=await d.pendingFees(tk,addr);if(sh.gt(0)||pf.gt(0))$("ly").innerHTML='<div class="pos"><div><b>'+f(sh,6)+' shares</b><div class="mu">About '+fq(sh.mul(lp.rQ).div(lp.total),2)+' USDG + '+f(sh.mul(lp.rTok).div(lp.total),2)+' tokens</div><div class="up">Claimable fees: '+fq(pf,4)+' USDG</div></div><div style="display:flex;flex-direction:column;gap:8px"><button class="btn s" id="cl"'+(pf.gt(0)?'':' disabled')+'>Claim fees</button><button class="btn s" id="rm"'+(sh.gt(0)?'':' disabled')+'>Remove all</button></div></div>'}
+  quote();
+}
+function quote(){if(cv&&!cv.graduated){quoteCurve();return}
+  var v=amt("sa");
+  if(!lp||lp.total.eq(0)||v.lte(0)){$("sq").textContent="You receive: 0";return}
+  var b=dir==="buy",o=calc(v,b);
+  $("sq").textContent="You receive: "+(b?f(o,2):fq(o,4))+" "+(b?sym:"USDG")+" (fee "+((30+cfb.toNumber())/100)+"%, 1% max slippage)";
+}
+$("lt").onchange=function(){run(loadPool)};
+$("sa").oninput=quote;
+$("ae").oninput=function(){if(lp&&lp.total.gt(0)){var e=amt("ae");$("aq").textContent="Needs about "+f(e.mul(lp.rTok).div(lp.rQ),2)+" "+sym+" at the current price."}};
+$("sd").onclick=function(e){var x=e.target.dataset.d;if(!x)return;dir=x;document.querySelectorAll("#sd button").forEach(function(b){b.classList.toggle("on",b===e.target)});quote()};
+$("sw").onclick=function(){if(!addr)return $("cn").click();run(async function(){
+  await need();if(cv&&!cv.graduated)return curveSwap();if(!lp||lp.total.eq(0))throw new Error("Load a token that already has a pool.");
+  var v=amt("sa");if(v.lte(0))throw new Error("Enter an amount.");
+  var b=dir==="buy",d=new ethers.Contract(C.DEX,DEXA,signer),o=calc(v,b),min=o.mul(99).div(100);
+  if(b){await ap(C.USDG,v);toast("Confirm the swap in your wallet…");await(await d.swapQuoteForTokens(tk,v,min)).wait()}
+  else{var t=new ethers.Contract(tk,T2,signer);if((await t.allowance(addr,C.DEX)).lt(v)){toast("Approve the token in your wallet…");await(await t.approve(C.DEX,v)).wait()}toast("Confirm the swap in your wallet…");await(await d.swapTokensForQ(tk,v,min)).wait()}
+  $("sa").value="";toast("Swap complete.");await loadPool();await load();
+})};
+$("ad").onclick=function(){if(!addr)return $("cn").click();run(async function(){
+  await need();if(!ok(tk))throw new Error("Load a token address first.");if(cv&&!cv.graduated)throw new Error("Liquidity opens when the token graduates from the bonding curve.");
+  var e=amt("ae"),m=amt("at");if(e.lte(0)||m.lte(0))throw new Error("Enter both amounts.");
+  var t=new ethers.Contract(tk,T2,signer),d=new ethers.Contract(C.DEX,DEXA,signer);
+  if((await t.allowance(addr,C.DEX)).lt(m)){toast("Approve the token in your wallet…");await(await t.approve(C.DEX,m)).wait()}
+  await ap(C.USDG,e);toast("Confirm in your wallet…");await(await d.addLiquidity(tk,e,m,0)).wait();
+  $("ae").value="";$("at").value="";toast("Liquidity added.");await loadPool();await load();
+})};
+$("ly").onclick=function(e){if(e.target.id==="cl"){run(async function(){toast("Confirm in your wallet…");await(await new ethers.Contract(C.DEX,DEXA,signer).claimLpFees(tk)).wait();toast("Fees claimed in USDG.");await loadPool();await load()});return}if(e.target.id!=="rm")return;run(async function(){
+  var d=new ethers.Contract(C.DEX,DEXA,signer),sh=await d.shares(tk,addr),pl=await d.pools(tk);
+  var me=sh.mul(pl.rQ).div(pl.total).mul(98).div(100),mt=sh.mul(pl.rTok).div(pl.total).mul(98).div(100);
+  toast("Confirm in your wallet…");await(await d.removeLiquidity(tk,sh,me,mt)).wait();
+  toast("Liquidity removed.");await loadPool();await load();
+})};
+
+async function earn(){try{if(!ok(C.DEX)||!addr)return;var d=new ethers.Contract(C.DEX,DEXA,prov||ro);qd=await new ethers.Contract(C.USDG,T2,ro).decimals();var v=await d.creatorFees(addr);if(ok(C.FACTORY))v=v.add(await new ethers.Contract(C.FACTORY,FAC,prov||ro).fees(addr));$("ce").textContent="Claimable: "+fq(v,4)+" USDG. You earn 0.60% of every USDG trade in tokens you launch.";$("cc").disabled=v.eq(0)}catch(e){}}
+$("cc").onclick=function(){run(async function(){await need();toast("Confirm in your wallet…");var dx=new ethers.Contract(C.DEX,DEXA,signer),lq=new ethers.Contract(C.FACTORY,FAC,signer);if((await dx.creatorFees(addr)).gt(0))await(await dx.claimCreatorFees()).wait();if((await lq.fees(addr)).gt(0))await(await lq.claimFees()).wait();toast("Creator fees claimed.");earn()})};
+function drawChart(){
+  var a=parseFloat($("amt").value)||1000,apr=Math.max(pd[sel]?pd[sel].aprBps/100:[6,12,18][sel],0.01),pts=[],i;
+  for(i=0;i<=12;i++)pts.push(a*(1+apr/100*i/12));
+  var end=pts[12],x=function(k){return 10+k/12*280},y=function(v){return 100-(v-a)/(end-a)*80};
+  var ln=pts.map(function(v,k){return x(k).toFixed(1)+","+y(v).toFixed(1)}).join(" ");
+  $("pc").innerHTML='<polygon points="10,100 '+ln+' 290,100" fill="var(--grb)" opacity=".12"/><polyline points="'+ln+'" fill="none" stroke="var(--grb)" stroke-width="2.5" stroke-linejoin="round"/><line x1="10" y1="100" x2="290" y2="100" stroke="var(--ln)"/><text x="10" y="116" font-size="10" fill="var(--mu)">Now</text><text x="150" y="116" font-size="10" fill="var(--mu)" text-anchor="middle">6 months</text><text x="290" y="116" font-size="10" fill="var(--mu)" text-anchor="end">12 months</text>';
+  $("pcap").textContent=(parseFloat($("amt").value)?"":"Example with 1,000 VELA. ")+"After 12 months at "+apr.toFixed(1)+"% APR: "+Math.round(end).toLocaleString("en-US")+" VELA (+"+Math.round(end-a).toLocaleString("en-US")+"). Projection only. The APR is locked when you stake.";
+}
+function cvInfo(c){var pr=Number(U.formatUnits(c.vQ,qd))/Number(U.formatUnits(c.vT,18));return{pr:pr,mc:pr*1e9,pct:Number(U.formatUnits(c.sold,18))/8e6}}
+function curveLine(c){var i=cvInfo(c);return "Bonding curve · market cap $"+Math.round(i.mc).toLocaleString("en-US")+" · "+i.pct.toFixed(0)+"% to graduation"}
+function curveText(){var i=cvInfo(cv);return "Bonding curve · price "+i.pr.toPrecision(3)+" USDG · market cap $"+Math.round(i.mc).toLocaleString("en-US")}
+function drawCurve(){var i=cvInfo(cv);$("cvb").style.width=Math.min(100,i.pct)+"%";$("cvt").textContent=i.pct.toFixed(1)+"% to graduation. At about $42,000 market cap the token moves to the Vela DEX."}
+async function apx(a,sp,v){var t=new ethers.Contract(a,T2,signer);if((await t.allowance(addr,sp)).lt(v)){toast("Approve in your wallet…");await(await t.approve(sp,v)).wait()}}
+async function quoteCurve(){
+  var v=amt("sa"),b=dir==="buy";if(v.lte(0)){$("sq").textContent="You receive: 0";return}
+  try{var L=new ethers.Contract(C.FACTORY,FAC,ro);
+    if(b){var r=await L.previewBuy(tk,v);$("sq").textContent="You receive: "+f(r.out,2)+" "+sym+" (1% fee, 1% max slippage)"}
+    else{var q=await L.previewSell(tk,v);$("sq").textContent="You receive: "+fq(q,4)+" USDG (1% fee, 1% max slippage)"}
+  }catch(e){$("sq").textContent="You receive: 0"}
+}
+async function curveSwap(){
+  var b=dir==="buy",v=amt("sa");if(v.lte(0))throw new Error("Enter an amount.");
+  var L=new ethers.Contract(C.FACTORY,FAC,signer);
+  if(b){var r=await L.previewBuy(tk,v);if(r.out.eq(0))throw new Error("Amount too small.");await apx(C.USDG,C.FACTORY,v);toast("Confirm the buy in your wallet…");await(await L.buy(tk,v,r.out.mul(99).div(100))).wait()}
+  else{var q=await L.previewSell(tk,v);await apx(tk,C.FACTORY,v);toast("Confirm the sell in your wallet…");await(await L.sell(tk,v,q.mul(99).div(100))).wait()}
+  $("sa").value="";toast("Done.");await loadPool();await load();
+}
+function parseMeta(t){try{var m=JSON.parse(t);return{d:String(m.description||"").slice(0,500),i:/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]+$/.test(m.image||"")?m.image:""}}catch(e){return{d:"",i:""}}}
+function imgTag(m,z){z=z||44;return m&&m.i?'<img alt="" src="'+m.i+'" style="width:'+z+'px;height:'+z+'px;border-radius:12px;object-fit:cover;flex:none">':'<div style="width:'+z+'px;height:'+z+'px;border-radius:12px;background:var(--grb);opacity:.18;flex:none"></div>'}
+async function loadMeta(){
+  $("tm").innerHTML="";if(!ok(C.FACTORY))return;
+  try{var fa=new ethers.Contract(C.FACTORY,FAC,ro),bn=await fa.createdBlock(tk);if(bn.eq(0))return;
+    var ev=await fa.queryFilter(fa.filters.TokenMeta(tk),bn.toNumber(),bn.toNumber());if(!ev.length)return;
+    var m=parseMeta(ev[0].args.meta);$("tm").innerHTML='<div style="display:flex;gap:12px;align-items:center;margin:8px 0">'+imgTag(m,56)+'<div class="mu" style="font-size:14px">'+esc(m.d)+'</div></div>'}catch(e){}
+}
+var logoData="";
+$("tbtn").onclick=function(){$("tfile").click()};
+$("tfile").onchange=function(){var fl=this.files[0];if(!fl)return;var rd=new FileReader();rd.onload=function(){var im=new Image();im.onload=function(){
+  var c=document.createElement("canvas");c.width=c.height=160;var x=c.getContext("2d");x.fillStyle="#111513";x.fillRect(0,0,160,160);
+  var z=Math.min(im.width,im.height);x.drawImage(im,(im.width-z)/2,(im.height-z)/2,z,z,0,0,160,160);
+  var q=0.85,d=c.toDataURL("image/jpeg",q);while(d.length>30000&&q>0.4){q-=0.15;d=c.toDataURL("image/jpeg",q)}
+  logoData=d;$("tlp").src=d;$("tlp").style.display="block";$("tfs").textContent="Logo ready ("+Math.round(d.length/1024)+" KB). Stored on-chain."};
+  im.onerror=function(){$("tfs").textContent="Could not read that image."};im.src=rd.result};rd.readAsDataURL(fl)};
+var T2n=T2.concat(["function name() view returns (string)"]);
+var kv=function(k,v){return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--ln);font-size:14px"><span class="mu">'+k+'</span><b>'+v+'</b></div>'};
+async function tokenInfo(a){var fa=new ethers.Contract(C.FACTORY,FAC,ro),t=new ethers.Contract(a,T2n,ro),r=await Promise.all([t.name(),t.symbol(),fa.creatorOf(a),fa.createdBlock(a)]);return{token:a,name:r[0],symbol:r[1],creator:r[2],block:r[3].toNumber()}}
+async function listTokens(n){var fa=new ethers.Contract(C.FACTORY,FAC,ro),c=(await fa.tokenCount()).toNumber(),idx=[];for(var i=c-1;i>=Math.max(0,c-n);i--)idx.push(i);var ad=await Promise.all(idx.map(function(i){return fa.tokens(i)}));return Promise.all(ad.map(tokenInfo))}
+async function tokensByCreator(u,n){var fa=new ethers.Contract(C.FACTORY,FAC,ro),ad=(await fa.tokensOf(u)).slice().reverse().slice(0,n);return Promise.all(ad.map(tokenInfo))}
+async function metaOf(v){try{var fa=new ethers.Contract(C.FACTORY,FAC,ro),ev=await fa.queryFilter(fa.filters.TokenMeta(v.token),v.block,v.block);return ev.length?parseMeta(ev[0].args.meta):{d:"",i:""}}catch(e){return{d:"",i:""}}}
+function mcAt(pct){var vt=1066666667-pct/100*8e8;return 2800*1066666667/(vt*vt)*1e9}
+function curveSvg(pct){
+  var n=40,x=function(fr){return 10+fr*280},y=function(v){return 100-Math.min(v,42000)/42000*85},ln=[];
+  for(var i=0;i<=n;i++)ln.push(x(i/n).toFixed(1)+","+y(mcAt(i/n*100)).toFixed(1));
+  var mk=pct==null?"":'<circle cx="'+x(pct/100).toFixed(1)+'" cy="'+y(mcAt(pct)).toFixed(1)+'" r="5" fill="var(--grb)"/>';
+  return '<svg viewBox="0 0 300 130" style="width:100%;height:150px;display:block;margin-top:8px"><line x1="10" y1="100" x2="290" y2="100" stroke="var(--ln)"/><polyline points="'+ln.join(" ")+'" fill="none" stroke="var(--grb)" stroke-width="2.5" stroke-linejoin="round" opacity=".55"/>'+mk+'<text x="10" y="118" font-size="10" fill="var(--mu)">$2.6k</text><text x="150" y="118" font-size="10" fill="var(--mu)" text-anchor="middle">Market cap vs tokens sold</text><text x="290" y="118" font-size="10" fill="var(--mu)" text-anchor="end">$42k</text></svg>'
+}
+async function showToken(tok){
+  $("tkc").innerHTML='<div class="mu">Loading…</div>';document.querySelector('.bnav [data-t="token"]').click();
+  try{
+    var fa=new ethers.Contract(C.FACTORY,FAC,ro),d=new ethers.Contract(C.DEX,DEXA,ro),t=new ethers.Contract(tok,T2n,ro);
+    qd=await new ethers.Contract(C.USDG,T2,ro).decimals();
+    var r=await Promise.all([t.name(),t.symbol(),fa.creatorOf(tok),fa.createdBlock(tok),fa.curves(tok),d.pools(tok),fa.volume(tok)]),c=r[4],p=r[5],grad=c.graduated,m={d:"",i:""};
+    try{var ev=await fa.queryFilter(fa.filters.TokenMeta(tok),r[3].toNumber(),r[3].toNumber());if(ev.length)m=parseMeta(ev[0].args.meta)}catch(e){}
+    var onCurve=!grad&&c.vT.gt(0),inf=onCurve?cvInfo(c):null,mc=onCurve?inf.mc:(p.total.gt(0)?Number(U.formatUnits(p.rQ,qd))/Number(U.formatUnits(p.rTok,18))*1e9:0),sh=function(a){return a.slice(0,6)+"…"+a.slice(-4)};
+    var h='<div style="display:flex;gap:12px;align-items:center">'+imgTag(m,64)+'<div><div style="font-size:20px;font-weight:700">'+esc(r[0])+' <span class="mu" style="font-size:14px">'+esc(r[1])+'</span></div><div class="mu">'+(grad?"Graduated to the Vela DEX":onCurve?"Bonding curve":"Vela token")+' · by <a href="'+CH.ex+'/address/'+r[2]+'" target="_blank" rel="noopener">'+sh(r[2])+'</a></div></div></div>';
+    if(m.d)h+='<div class="mu" style="font-size:14px;margin:12px 0">'+esc(m.d)+'</div>';
+    h+='<div style="margin-top:10px">'+kv("Market cap","$"+Math.round(mc).toLocaleString("en-US"))+kv("Price",(mc/1e9).toPrecision(3)+" USDG")+kv("Volume on the curve",fq(r[6],0)+" USDG")+(p.total.gt(0)?kv("Liquidity","$"+fq(p.rQ.mul(2),0)):"")+kv("Contract",'<a href="'+CH.ex+'/token/'+tok+'" target="_blank" rel="noopener">'+sh(tok)+'</a>')+'</div>';
+    if(onCurve)h+='<div style="margin-top:12px;height:10px;background:var(--ln);border-radius:99px;overflow:hidden"><div style="height:100%;width:'+Math.min(100,inf.pct)+'%;background:var(--grb)"></div></div><div class="mu" style="margin-top:6px">'+inf.pct.toFixed(1)+'% to graduation at about $42,000</div>'+curveSvg(inf.pct);
+    h+='<button class="btn" id="tkb" style="margin-top:12px">Trade</button><h2 style="margin-top:18px">Recent trades</h2><div id="trd"><div class="mu">Loading…</div></div>';
+    $("tkc").innerHTML=h;$("tkb").onclick=function(){$("lt").value=tok;document.querySelector('.bnav [data-t="liquidity"]').click();run(loadPool)};
+    loadTrades(tok,r[1]);
+  }catch(e){$("tkc").innerHTML='<div class="mu">Could not load this token. Try again.</div>'}
+}
+async function loadTrades(tok,sym){
+  try{var fa=new ethers.Contract(C.FACTORY,FAC,ro),d=new ethers.Contract(C.DEX,DEXA,ro),b=await ro.getBlockNumber(),from=Math.max(0,b-20000),ev=[];
+    try{ev=ev.concat((await fa.queryFilter(fa.filters.Trade(tok),from,b)).map(function(x){return{blk:x.blockNumber,tx:x.transactionHash,buy:x.args.isBuy,q:x.args.quoteAmt,t:x.args.tokenAmt}}))}catch(e){}
+    try{ev=ev.concat((await d.queryFilter(d.filters.Swap(tok),from,b)).map(function(x){var qi=x.args.quoteIn;return{blk:x.blockNumber,tx:x.transactionHash,buy:qi,q:qi?x.args.amtIn:x.args.amtOut,t:qi?x.args.amtOut:x.args.amtIn}}))}catch(e){}
+    ev.sort(function(a,c){return c.blk-a.blk});ev=ev.slice(0,8);
+    $("trd").innerHTML=ev.length?ev.map(function(x){return '<div style="display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--ln);font-size:13px"><span style="color:'+(x.buy?"var(--gr)":"var(--rd)")+';font-weight:700">'+(x.buy?"Buy":"Sell")+'</span><span>'+fq(x.q,2)+' USDG</span><span class="mu">'+f(x.t,0)+' '+esc(sym)+'</span><a href="'+CH.ex+'/tx/'+x.tx+'" target="_blank" rel="noopener">tx</a></div>'}).join(""):'<div class="mu">No trades in the recent window.</div>'
+  }catch(e){}
+}
+async function renderStats(){
+  var el=$("st");
+  if(!ok(C.FACTORY)||!ok(C.DEX)){el.innerHTML='<div class="mu">Stats will appear once Vela launches.</div>';$("stt").innerHTML="";$("stc").innerHTML="";return}
+  try{
+    var fa=new ethers.Contract(C.FACTORY,FAC,ro),d=new ethers.Contract(C.DEX,DEXA,ro);
+    qd=await new ethers.Contract(C.USDG,T2,ro).decimals();
+    var r=await Promise.all([fa.tokenCount(),fa.graduatedCount(),fa.totalVolume()]);
+    el.innerHTML=kv("Tokens launched",r[0].toString())+kv("Graduated to the DEX",r[1].toString())+kv("Volume on the curve",fq(r[2],0)+" USDG");
+    var list=await listTokens(50),ps=await Promise.all(list.map(function(v){return d.pools(v.token)})),cs=await Promise.all(list.map(function(v){return fa.curves(v.token)})),ms=await Promise.all(list.map(metaOf));
+    var rows=list.map(function(v,k){var c=cs[k],p=ps[k],mc=0;if(c.vT.gt(0)&&!c.graduated)mc=cvInfo(c).mc;else if(p.total.gt(0))mc=Number(U.formatUnits(p.rQ,qd))/Number(U.formatUnits(p.rTok,18))*1e9;return{v:v,m:ms[k],mc:mc,g:c.graduated}});
+    rows.sort(function(a,b){return b.mc-a.mc});
+    $("stt").innerHTML=rows.slice(0,5).map(function(x,i){return '<div class="pos"><div style="display:flex;align-items:center;gap:12px"><b style="width:18px">'+(i+1)+'</b>'+imgTag(x.m,40)+'<div><b>'+esc(x.v.name)+'</b> <span class="mu">'+esc(x.v.symbol)+'</span><div class="mu">'+(x.g?"Graduated":"On the curve")+'</div></div></div><div style="text-align:right"><b>$'+Math.round(x.mc).toLocaleString("en-US")+'</b><div><button class="btn s" data-view="'+x.v.token+'">View</button></div></div></div>'}).join("")||'<div class="mu">No tokens yet.</div>';
+    var cr={};list.forEach(function(v,k){var a=v.creator.toLowerCase();cr[a]=cr[a]||{a:v.creator,n:0,g:0};cr[a].n++;if(cs[k].graduated)cr[a].g++});
+    var top=Object.keys(cr).map(function(k){return cr[k]}).sort(function(a,b){return b.g-a.g||b.n-a.n}).slice(0,5);
+    $("stc").innerHTML=top.map(function(c,i){return kv((i+1)+". "+'<a href="'+CH.ex+'/address/'+c.a+'" target="_blank" rel="noopener">'+c.a.slice(0,6)+"…"+c.a.slice(-4)+'</a>',c.n+" launched · "+c.g+" graduated")}).join("")||'<div class="mu">No creators yet.</div>';
+  }catch(e){el.innerHTML='<div class="mu">Could not load stats. Try again.</div>'}
+}
+$("stt").onclick=function(e){var v=e.target.dataset.view;if(v)showToken(v)};
+document.querySelectorAll("[data-go]").forEach(function(a){a.onclick=function(e){e.preventDefault();document.querySelector('.bnav [data-t="'+a.dataset.go+'"]').click()}});
+var ef="all";
+async function explore(){
+  if(!ok(C.FACTORY)||!ok(C.DEX)){$("ex").innerHTML='<div class="mu">Launching soon. Follow us on X to be the first to know.</div>';return}
+  try{
+    var fa=new ethers.Contract(C.FACTORY,FAC,ro),d=new ethers.Contract(C.DEX,DEXA,ro);
+    qd=await new ethers.Contract(C.USDG,T2,ro).decimals();
+    var list=ef==="mine"?(addr?await tokensByCreator(addr,30):[]):await listTokens(30);
+    var ps=await Promise.all(list.map(function(v){return d.pools(v.token)})),cs=await Promise.all(list.map(function(v){return fa.curves(v.token)})),ms=await Promise.all(list.map(metaOf));
+    $("ex").innerHTML=list.length?list.map(function(v,k){var p=ps[k],c=cs[k],has=p.total.gt(0),pr=has?Number(U.formatUnits(p.rQ,qd))/Number(U.formatUnits(p.rTok,18)):0;
+      return '<div class="pos"><div style="display:flex;align-items:center;gap:12px">'+imgTag(ms[k])+'<div><b>'+esc(v.name)+'</b> <span class="mu">'+esc(v.symbol)+'</span><div class="mu">'+(c.vT.gt(0)&&!c.graduated?curveLine(c):has?"Graduated · market cap $"+Math.round(pr*1e9).toLocaleString("en-US"):"New")+'</div></div></div><div style="display:flex;flex-direction:column;gap:6px"><button class="btn s" data-view="'+v.token+'">View</button><button class="btn s" data-tok="'+v.token+'">Trade</button></div></div>'}).join(""):'<div class="mu">'+(ef==="mine"?"You have not launched any tokens yet.":"No tokens launched yet.")+'</div>';
+  }catch(e){$("ex").innerHTML='<div class="mu">Could not load tokens. Try again.</div>'}
+}
+$("ex").onclick=function(e){var vw=e.target.dataset.view;if(vw){showToken(vw);return}var t=e.target.dataset.tok;if(!t)return;$("lt").value=t;document.querySelector('.bnav [data-t="liquidity"]').click();run(loadPool)};
+$("ef").onclick=function(e){var f=e.target.dataset.f;if(!f)return;ef=f;document.querySelectorAll("#ef button").forEach(function(x){x.classList.toggle("on",x===e.target)});explore()};
+function renderInfo(){var r=[["VELA token",C.VELA],["Staking",C.STAKING],["Token factory",C.FACTORY],["DEX",C.DEX],["USDG",C.USDG]];$("ci").innerHTML=r.map(function(x){return '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:14px"><span class="mu">'+x[0]+'</span>'+(ok(x[1])?'<a href="'+CH.ex+'/address/'+x[1]+'" target="_blank" rel="noopener">'+x[1].slice(0,6)+'…'+x[1].slice(-4)+'</a>':'<span class="mu">'+"Coming soon"+'</span>')+'</div>'}).join("")}
+var gTot=ethers.constants.Zero,gRw=ethers.constants.Zero;
+async function renderPortfolio(){
+  var el=$("pf");
+  if(!addr){el.innerHTML='<div class="mu">Connect your wallet to see your portfolio.</div>';return}
+  try{
+    var rp=prov||ro,eth=await rp.getBalance(addr),u=ethers.constants.Zero,fees=u;
+    try{if(ok(C.USDG)){qd=await new ethers.Contract(C.USDG,T2,ro).decimals();u=await new ethers.Contract(C.USDG,T2,rp).balanceOf(addr)}}catch(e){}
+    try{if(ok(C.DEX))fees=(await new ethers.Contract(C.DEX,DEXA,rp).creatorFees(addr)).add(ok(C.FACTORY)?await new ethers.Contract(C.FACTORY,FAC,rp).fees(addr):0)}catch(e){}
+    var r=function(k,v){return '<div style="display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--ln);font-size:14px"><span class="mu">'+k+'</span><b>'+v+'</b></div>'};
+    el.innerHTML=r("Wallet",'<a href="'+CH.ex+'/address/'+addr+'" target="_blank" rel="noopener">'+addr.slice(0,6)+'…'+addr.slice(-4)+'</a>')+r("ETH (gas)",f(eth,5))+r("VELA in wallet",f(vbal,2))+r("USDG",fq(u,2))+r("Staked + rewards",f(gTot,2)+" VELA")+r("Rewards earned","+"+f(gRw,4)+" VELA")+r("Creator fees to claim",fq(fees,4)+" USDG");
+  }catch(e){el.innerHTML='<div class="mu">Could not load your portfolio. Try again.</div>'}
+}
+$("pl").onclick=function(){ef="mine";document.querySelectorAll("#ef button").forEach(function(x){x.classList.toggle("on",x.dataset.f==="mine")});document.querySelector('.bnav [data-t="explore"]').click()};
+$("pcl").onclick=function(){$("cc").click()};
+$("fa").onclick=function(e){e.preventDefault();document.querySelector('.bnav [data-t="info"]').click()};
+var X_URL="https://x.com/VelaonRH";
+function renderCA(){
+  $("fx").href=X_URL;var el=$("fca");
+  if(ok(C.VELA)){el.textContent="CA: 0x49aa33d8df16d88adfa97ab2af395bddf10f814e"+C.VELA.slice(0,6)+"…"+C.VELA.slice(-4)+" · Tap to copy";el.classList.add("on")}
+  else el.textContent="CA: 0x49aa33d8df16d88adfa97ab2af395bddf10f814e";
+  el.onclick=function(){if(!ok(C.VELA))return;var o=el.textContent,done=function(){el.textContent="Copied ✓";setTimeout(function(){el.textContent=o},1500)};try{navigator.clipboard.writeText(C.VELA).then(done,function(){el.textContent=C.VELA})}catch(x){el.textContent=C.VELA}};
+}
+renderPools();load();recent();explore();renderInfo();renderCA();
+setInterval(function(){if(!busy&&addr)load().catch(function(){})},20000);
+</script>
+</body>
+</html>
