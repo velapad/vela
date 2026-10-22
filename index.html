@@ -467,7 +467,7 @@ $("fa").onclick=function(e){e.preventDefault();document.querySelector('.bnav [da
 var X_URL="https://x.com/VelaonRH";
 var CA_DEFAULT="0x49aa33d8df16d88adfa97ab2af395bddf10f814e";
 function renderCA(){
-  $("fx").href=X_URL;var el=$("fca"),a=ok(C.VELA)?C.VELA:CA_DEFAULT,label="+a.slice(0,6)+"\u2026"+a.slice(-4)+" \u00b7 Tap to copy";
+  $("fx").href=X_URL;var el=$("fca"),a=ok(C.VELA)?C.VELA:CA_DEFAULT,label=" "+a.slice(0,6)+"\u2026"+a.slice(-4)+" \u00b7 Tap to copy";
   el.textContent=label;el.classList.add("on");
   el.onclick=function(){var done=function(){el.textContent="Copied \u2713";setTimeout(function(){el.textContent=label},1500)};try{navigator.clipboard.writeText(a).then(done,function(){el.textContent=a})}catch(x){el.textContent=a}};
 }
