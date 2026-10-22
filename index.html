@@ -177,7 +177,7 @@ details.fq .mu{margin-top:8px;font-size:14px;line-height:1.55}
 
 <script>
 (function(){var r=document.documentElement,b=document.getElementById("th"),m=document.querySelector('meta[name="theme-color"]');function set(t,save){r.setAttribute("data-theme",t);m.content=t==="dark"?"#000000":"#ffffff";b.setAttribute("aria-label",t==="dark"?"Switch to light mode":"Switch to dark mode");if(save)try{localStorage.setItem("vela-theme",t)}catch(e){}}set(r.getAttribute("data-theme"));b.onclick=function(){set(r.getAttribute("data-theme")==="dark"?"light":"dark",1)};matchMedia("(prefers-color-scheme: dark)").addEventListener("change",function(e){var t;try{t=localStorage.getItem("vela-theme")}catch(x){}if(!t)set(e.matches?"dark":"light")})})();
-var C={VELA:"",STAKING:"",FACTORY:"",DEX:"",USDG:"0x5fc5360d0400a0fd4f2af552add042d716f1d168"};
+var C={VELA:"",STAKING:"0x7e04Bb9141e288bfff09A9d9Ac80c9243d9aaA76",FACTORY:"0x1ce7De5aF6BB43540CC5dc686cF13f196263944b",DEX:"0x2a63b6D7FFcD5248bF12b32e4948a5b0668d45ED",USDG:"0x5fc5360d0400a0fd4f2af552add042d716f1d168"};
 var CH={hex:"0x1237",rpc:"https://rpc.mainnet.chain.robinhood.com",ex:"https://robinhoodchain.blockscout.com"};
 var ERC=["function balanceOf(address) view returns (uint256)","function allowance(address,address) view returns (uint256)","function approve(address,uint256) returns (bool)"];
 var STK=["function pools(uint256) view returns (uint32 lockDays,uint16 aprBps)","function stakes(uint8,address) view returns (uint128 amount,uint128 owed,uint64 since,uint64 unlock,uint16 apr)","function pending(uint8,address) view returns (uint256)","function stake(uint8,uint128)","function unstake(uint8)"];
@@ -465,11 +465,11 @@ $("pl").onclick=function(){ef="mine";document.querySelectorAll("#ef button").for
 $("pcl").onclick=function(){$("cc").click()};
 $("fa").onclick=function(e){e.preventDefault();document.querySelector('.bnav [data-t="info"]').click()};
 var X_URL="https://x.com/VelaonRH";
+var CA_DEFAULT="0x49aa33d8df16d88adfa97ab2af395bddf10f814e";
 function renderCA(){
-  $("fx").href=X_URL;var el=$("fca");
-  if(ok(C.VELA)){el.textContent="CA: 0x49aa33d8df16d88adfa97ab2af395bddf10f814e"+C.VELA.slice(0,6)+"…"+C.VELA.slice(-4)+" · Tap to copy";el.classList.add("on")}
-  else el.textContent="CA: 0x49aa33d8df16d88adfa97ab2af395bddf10f814e";
-  el.onclick=function(){if(!ok(C.VELA))return;var o=el.textContent,done=function(){el.textContent="Copied ✓";setTimeout(function(){el.textContent=o},1500)};try{navigator.clipboard.writeText(C.VELA).then(done,function(){el.textContent=C.VELA})}catch(x){el.textContent=C.VELA}};
+  $("fx").href=X_URL;var el=$("fca"),a=ok(C.VELA)?C.VELA:CA_DEFAULT,label="CA: "+a.slice(0,6)+"\u2026"+a.slice(-4)+" \u00b7 Tap to copy";
+  el.textContent=label;el.classList.add("on");
+  el.onclick=function(){var done=function(){el.textContent="Copied \u2713";setTimeout(function(){el.textContent=label},1500)};try{navigator.clipboard.writeText(a).then(done,function(){el.textContent=a})}catch(x){el.textContent=a}};
 }
 renderPools();load();recent();explore();renderInfo();renderCA();
 setInterval(function(){if(!busy&&addr)load().catch(function(){})},20000);
