@@ -212,7 +212,7 @@ async function connect(eth){
     prov=new ethers.providers.Web3Provider(eth);signer=prov.getSigner();addr=a[0];ro=prov;
     if(eth.on){eth.on("accountsChanged",function(){location.reload()});eth.on("chainChanged",function(){location.reload()})}
     $("cn").textContent=addr.slice(0,6)+"…"+addr.slice(-4);
-    toast("");await load();
+    toast("");await load();explore();recent();
   });
 }
 $("cn").onclick=function(){
@@ -273,7 +273,7 @@ $("mk").onclick=function(){if(!addr)return $("cn").click();run(async function(){
   var ev=r.events.filter(function(x){return x.event==="TokenCreated"})[0],t=ev.args.token;
   $("res").innerHTML='<div class="card" style="background:var(--bg)"><b>'+esc(n)+' ('+esc(s)+') is live</b><div class="mu" style="word-break:break-all">'+t+'</div><a href="'+CH.ex+'/token/'+t+'" target="_blank" rel="noopener">View on explorer</a> · <a href="#" id="aw">Add to wallet</a> · <a href="#" id="al">Trade token</a></div>';
   $("aw").onclick=function(x){x.preventDefault();prov.provider.request({method:"wallet_watchAsset",params:{type:"ERC20",options:{address:t,symbol:s.slice(0,11),decimals:18}}}).catch(function(){})};
-  $("al").onclick=function(x){x.preventDefault();$("lt").value=t;document.querySelector('[data-t="liquidity"]').click();run(loadPool)};toast("Token created.");logoData="";$("tlp").style.display="none";$("tdesc").value="";recent();
+  $("al").onclick=function(x){x.preventDefault();$("lt").value=t;document.querySelector('[data-t="liquidity"]').click();run(loadPool)};toast("Token created.");logoData="";$("tlp").style.display="none";$("tdesc").value="";recent();explore();
 })};
 async function recent(){if(!ok(C.FACTORY))return;try{var l=await listTokens(8);if(l.length)$("recent").innerHTML=l.map(function(x){return '<div class="pos"><div><b>'+esc(x.name)+'</b> <span class="mu">'+esc(x.symbol)+'</span></div><a href="'+CH.ex+'/token/'+x.token+'" target="_blank" rel="noopener">View</a></div>'}).join("")}catch(e){}}
 document.querySelector(".bnav").onclick=function(e){var bb=e.target.closest("button");if(!bb)return;var t=bb.dataset.t;if(!t)return;window.scrollTo(0,0);
@@ -362,7 +362,7 @@ async function curveSwap(){
   $("sa").value="";toast("Done.");await loadPool();await load();
 }
 function parseMeta(t){try{var m=JSON.parse(t);return{d:String(m.description||"").slice(0,500),i:/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]+$/.test(m.image||"")?m.image:""}}catch(e){return{d:"",i:""}}}
-function imgTag(m,z){z=z||44;return m&&m.i?'<img alt="" src="'+m.i+'" style="width:'+z+'px;height:'+z+'px;border-radius:12px;object-fit:cover;flex:none">':'<div style="width:'+z+'px;height:'+z+'px;border-radius:12px;background:var(--grb);opacity:.18;flex:none"></div>'}
+function imgTag(m,z,sy){z=z||44;return m&&m.i?'<img alt="" src="'+m.i+'" style="width:'+z+'px;height:'+z+'px;border-radius:12px;object-fit:cover;flex:none">':'<div style="width:'+z+'px;height:'+z+'px;border-radius:12px;background:rgba(0,200,5,.18);color:var(--gr);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:'+Math.round(z*.42)+'px;flex:none">'+esc((sy||"?").charAt(0).toUpperCase())+'</div>'}
 async function loadMeta(){
   $("tm").innerHTML="";if(!ok(C.FACTORY))return;
   try{var fa=new ethers.Contract(C.FACTORY,FAC,ro),bn=await fa.createdBlock(tk);if(bn.eq(0))return;
@@ -382,7 +382,8 @@ var kv=function(k,v){return '<div style="display:flex;justify-content:space-betw
 async function tokenInfo(a){var fa=new ethers.Contract(C.FACTORY,FAC,ro),t=new ethers.Contract(a,T2n,ro),r=await Promise.all([t.name(),t.symbol(),fa.creatorOf(a),fa.createdBlock(a)]);return{token:a,name:r[0],symbol:r[1],creator:r[2],block:r[3].toNumber()}}
 async function listTokens(n){var fa=new ethers.Contract(C.FACTORY,FAC,ro),c=(await fa.tokenCount()).toNumber(),idx=[];for(var i=c-1;i>=Math.max(0,c-n);i--)idx.push(i);var ad=await Promise.all(idx.map(function(i){return fa.tokens(i)}));return Promise.all(ad.map(tokenInfo))}
 async function tokensByCreator(u,n){var fa=new ethers.Contract(C.FACTORY,FAC,ro),ad=(await fa.tokensOf(u)).slice().reverse().slice(0,n);return Promise.all(ad.map(tokenInfo))}
-async function metaOf(v){try{var fa=new ethers.Contract(C.FACTORY,FAC,ro),ev=await fa.queryFilter(fa.filters.TokenMeta(v.token),v.block,v.block);return ev.length?parseMeta(ev[0].args.meta):{d:"",i:""}}catch(e){return{d:"",i:""}}}
+var metaCache={};
+async function metaOf(v){if(metaCache[v.token])return metaCache[v.token];var r={d:"",i:""};try{var fa=new ethers.Contract(C.FACTORY,FAC,ro),ev=await fa.queryFilter(fa.filters.TokenMeta(v.token),v.block,v.block);if(!ev.length)ev=await fa.queryFilter(fa.filters.TokenMeta(v.token),Math.max(0,v.block-2),v.block+2);if(ev.length)r=parseMeta(ev[0].args.meta)}catch(e){return r}if(r.i)metaCache[v.token]=r;return r}
 function mcAt(pct){var vt=1066666667-pct/100*8e8;return 2800*1066666667/(vt*vt)*1e9}
 function curveSvg(pct){
   var n=40,x=function(fr){return 10+fr*280},y=function(v){return 100-Math.min(v,42000)/42000*85},ln=[];
@@ -398,7 +399,7 @@ async function showToken(tok){
     var r=await Promise.all([t.name(),t.symbol(),fa.creatorOf(tok),fa.createdBlock(tok),fa.curves(tok),d.pools(tok),fa.volume(tok)]),c=r[4],p=r[5],grad=c.graduated,m={d:"",i:""};
     try{var ev=await fa.queryFilter(fa.filters.TokenMeta(tok),r[3].toNumber(),r[3].toNumber());if(ev.length)m=parseMeta(ev[0].args.meta)}catch(e){}
     var onCurve=!grad&&c.vT.gt(0),inf=onCurve?cvInfo(c):null,mc=onCurve?inf.mc:(p.total.gt(0)?Number(U.formatUnits(p.rQ,qd))/Number(U.formatUnits(p.rTok,18))*1e9:0),sh=function(a){return a.slice(0,6)+"…"+a.slice(-4)};
-    var h='<div style="display:flex;gap:12px;align-items:center">'+imgTag(m,64)+'<div><div style="font-size:20px;font-weight:700">'+esc(r[0])+' <span class="mu" style="font-size:14px">'+esc(r[1])+'</span></div><div class="mu">'+(grad?"Graduated to the Vela DEX":onCurve?"Bonding curve":"Vela token")+' · by <a href="'+CH.ex+'/address/'+r[2]+'" target="_blank" rel="noopener">'+sh(r[2])+'</a></div></div></div>';
+    var h='<div style="display:flex;gap:12px;align-items:center">'+imgTag(m,64,r[1])+'<div><div style="font-size:20px;font-weight:700">'+esc(r[0])+' <span class="mu" style="font-size:14px">'+esc(r[1])+'</span></div><div class="mu">'+(grad?"Graduated to the Vela DEX":onCurve?"Bonding curve":"Vela token")+' · by <a href="'+CH.ex+'/address/'+r[2]+'" target="_blank" rel="noopener">'+sh(r[2])+'</a></div></div></div>';
     if(m.d)h+='<div class="mu" style="font-size:14px;margin:12px 0">'+esc(m.d)+'</div>';
     h+='<div style="margin-top:10px">'+kv("Market cap","$"+Math.round(mc).toLocaleString("en-US"))+kv("Price",(mc/1e9).toPrecision(3)+" USDG")+kv("Volume on the curve",fq(r[6],0)+" USDG")+(p.total.gt(0)?kv("Liquidity","$"+fq(p.rQ.mul(2),0)):"")+kv("Contract",'<a href="'+CH.ex+'/token/'+tok+'" target="_blank" rel="noopener">'+sh(tok)+'</a>')+'</div>';
     if(onCurve)h+='<div style="margin-top:12px;height:10px;background:var(--ln);border-radius:99px;overflow:hidden"><div style="height:100%;width:'+Math.min(100,inf.pct)+'%;background:var(--grb)"></div></div><div class="mu" style="margin-top:6px">'+inf.pct.toFixed(1)+'% to graduation at about $42,000</div>'+curveSvg(inf.pct);
@@ -426,7 +427,7 @@ async function renderStats(){
     var list=await listTokens(50),ps=await Promise.all(list.map(function(v){return d.pools(v.token)})),cs=await Promise.all(list.map(function(v){return fa.curves(v.token)})),ms=await Promise.all(list.map(metaOf));
     var rows=list.map(function(v,k){var c=cs[k],p=ps[k],mc=0;if(c.vT.gt(0)&&!c.graduated)mc=cvInfo(c).mc;else if(p.total.gt(0))mc=Number(U.formatUnits(p.rQ,qd))/Number(U.formatUnits(p.rTok,18))*1e9;return{v:v,m:ms[k],mc:mc,g:c.graduated}});
     rows.sort(function(a,b){return b.mc-a.mc});
-    $("stt").innerHTML=rows.slice(0,5).map(function(x,i){return '<div class="pos"><div style="display:flex;align-items:center;gap:12px"><b style="width:18px">'+(i+1)+'</b>'+imgTag(x.m,40)+'<div><b>'+esc(x.v.name)+'</b> <span class="mu">'+esc(x.v.symbol)+'</span><div class="mu">'+(x.g?"Graduated":"On the curve")+'</div></div></div><div style="text-align:right"><b>$'+Math.round(x.mc).toLocaleString("en-US")+'</b><div><button class="btn s" data-view="'+x.v.token+'">View</button></div></div></div>'}).join("")||'<div class="mu">No tokens yet.</div>';
+    $("stt").innerHTML=rows.slice(0,5).map(function(x,i){return '<div class="pos"><div style="display:flex;align-items:center;gap:12px"><b style="width:18px">'+(i+1)+'</b>'+imgTag(x.m,40,x.v.symbol)+'<div><b>'+esc(x.v.name)+'</b> <span class="mu">'+esc(x.v.symbol)+'</span><div class="mu">'+(x.g?"Graduated":"On the curve")+'</div></div></div><div style="text-align:right"><b>$'+Math.round(x.mc).toLocaleString("en-US")+'</b><div><button class="btn s" data-view="'+x.v.token+'">View</button></div></div></div>'}).join("")||'<div class="mu">No tokens yet.</div>';
     var cr={};list.forEach(function(v,k){var a=v.creator.toLowerCase();cr[a]=cr[a]||{a:v.creator,n:0,g:0};cr[a].n++;if(cs[k].graduated)cr[a].g++});
     var top=Object.keys(cr).map(function(k){return cr[k]}).sort(function(a,b){return b.g-a.g||b.n-a.n}).slice(0,5);
     $("stc").innerHTML=top.map(function(c,i){return kv((i+1)+". "+'<a href="'+CH.ex+'/address/'+c.a+'" target="_blank" rel="noopener">'+c.a.slice(0,6)+"…"+c.a.slice(-4)+'</a>',c.n+" launched · "+c.g+" graduated")}).join("")||'<div class="mu">No creators yet.</div>';
@@ -443,8 +444,8 @@ async function explore(){
     var list=ef==="mine"?(addr?await tokensByCreator(addr,30):[]):await listTokens(30);
     var ps=await Promise.all(list.map(function(v){return d.pools(v.token)})),cs=await Promise.all(list.map(function(v){return fa.curves(v.token)})),ms=await Promise.all(list.map(metaOf));
     $("ex").innerHTML=list.length?list.map(function(v,k){var p=ps[k],c=cs[k],has=p.total.gt(0),pr=has?Number(U.formatUnits(p.rQ,qd))/Number(U.formatUnits(p.rTok,18)):0;
-      return '<div class="pos"><div style="display:flex;align-items:center;gap:12px">'+imgTag(ms[k])+'<div><b>'+esc(v.name)+'</b> <span class="mu">'+esc(v.symbol)+'</span><div class="mu">'+(c.vT.gt(0)&&!c.graduated?curveLine(c):has?"Graduated · market cap $"+Math.round(pr*1e9).toLocaleString("en-US"):"New")+'</div></div></div><div style="display:flex;flex-direction:column;gap:6px"><button class="btn s" data-view="'+v.token+'">View</button><button class="btn s" data-tok="'+v.token+'">Trade</button></div></div>'}).join(""):'<div class="mu">'+(ef==="mine"?"You have not launched any tokens yet.":"No tokens launched yet.")+'</div>';
-  }catch(e){$("ex").innerHTML='<div class="mu">Could not load tokens. Try again.</div>'}
+      return '<div class="pos"><div style="display:flex;align-items:center;gap:12px">'+imgTag(ms[k],44,v.symbol)+'<div><b>'+esc(v.name)+'</b> <span class="mu">'+esc(v.symbol)+'</span><div class="mu">'+(c.vT.gt(0)&&!c.graduated?curveLine(c):has?"Graduated · market cap $"+Math.round(pr*1e9).toLocaleString("en-US"):"New")+'</div></div></div><div style="display:flex;flex-direction:column;gap:6px"><button class="btn s" data-view="'+v.token+'">View</button><button class="btn s" data-tok="'+v.token+'">Trade</button></div></div>'}).join(""):'<div class="mu">'+(ef==="mine"?"You have not launched any tokens yet.":"No tokens launched yet.")+'</div>';
+  }catch(e){$("ex").innerHTML='<div class="mu">Could not load tokens: '+esc(er(e))+'</div>'}
 }
 $("ex").onclick=function(e){var vw=e.target.dataset.view;if(vw){showToken(vw);return}var t=e.target.dataset.tok;if(!t)return;$("lt").value=t;document.querySelector('.bnav [data-t="liquidity"]').click();run(loadPool)};
 $("ef").onclick=function(e){var f=e.target.dataset.f;if(!f)return;ef=f;document.querySelectorAll("#ef button").forEach(function(x){x.classList.toggle("on",x===e.target)});explore()};
@@ -467,7 +468,7 @@ $("fa").onclick=function(e){e.preventDefault();document.querySelector('.bnav [da
 var X_URL="https://x.com/VelaonRH";
 var CA_DEFAULT="0x49aa33d8df16d88adfa97ab2af395bddf10f814e";
 function renderCA(){
-  $("fx").href=X_URL;var el=$("fca"),a=ok(C.VELA)?C.VELA:CA_DEFAULT,label=" "+a.slice(0,6)+"\u2026"+a.slice(-4)+" \u00b7 Tap to copy";
+  $("fx").href=X_URL;var el=$("fca"),a=ok(C.VELA)?C.VELA:CA_DEFAULT,label="CA: "+a.slice(0,6)+"\u2026"+a.slice(-4)+" \u00b7 Tap to copy";
   el.textContent=label;el.classList.add("on");
   el.onclick=function(){var done=function(){el.textContent="Copied \u2713";setTimeout(function(){el.textContent=label},1500)};try{navigator.clipboard.writeText(a).then(done,function(){el.textContent=a})}catch(x){el.textContent=a}};
 }
