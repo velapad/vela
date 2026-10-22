@@ -185,7 +185,7 @@ var FAC=["function fee() view returns (uint256)","function createToken(string,st
 var NAMES=["Flex","30 days","90 days"];
 var $=function(i){return document.getElementById(i)},U=ethers.utils;
 // Add more RPC URLs here (e.g. a free Alchemy/QuickNode/dRPC endpoint). The first one that answers is used.
-var RPCS=[CH.rpc];
+var RPCS=["https://robinhood-mainnet.g.alchemy.com/v2/alch_HPKsq2IH840xwKG2GGBy5",CH.rpc];
 var ro=(function(){var net={chainId:4663,name:"robinhood"},ps=RPCS.map(function(u,i){return new ethers.providers.StaticJsonRpcProvider(u,net)});return ps.length>1?new ethers.providers.FallbackProvider(ps.map(function(p,i){return{provider:p,priority:i+1,weight:1,stallTimeout:2500}}),1):ps[0]})(),roPub=ro;
 var prov,signer,addr,sel=0,wallets=[],busy=false,pd=[null,null,null],vbal=ethers.constants.Zero,fee=null;
 var ok=function(a){return U.isAddress(a)};
