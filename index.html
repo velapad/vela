@@ -459,9 +459,19 @@ async function renderPortfolio(){
     try{if(ok(C.USDG)){qd=await new ethers.Contract(C.USDG,T2,ro).decimals();u=await new ethers.Contract(C.USDG,T2,rp).balanceOf(addr)}}catch(e){}
     try{if(ok(C.DEX))fees=(await new ethers.Contract(C.DEX,DEXA,rp).creatorFees(addr)).add(ok(C.FACTORY)?await new ethers.Contract(C.FACTORY,FAC,rp).fees(addr):0)}catch(e){}
     var r=function(k,v){return '<div style="display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--ln);font-size:14px"><span class="mu">'+k+'</span><b>'+v+'</b></div>'};
-    el.innerHTML=r("Wallet",'<a href="'+CH.ex+'/address/'+addr+'" target="_blank" rel="noopener">'+addr.slice(0,6)+'…'+addr.slice(-4)+'</a>')+r("ETH (gas)",f(eth,5))+r("VELA in wallet",f(vbal,2))+r("USDG",fq(u,2))+r("Staked + rewards",f(gTot,2)+" VELA")+r("Rewards earned","+"+f(gRw,4)+" VELA")+r("Creator fees to claim",fq(fees,4)+" USDG");
+    el.innerHTML=r("Wallet",'<a href="'+CH.ex+'/address/'+addr+'" target="_blank" rel="noopener">'+addr.slice(0,6)+'…'+addr.slice(-4)+'</a>')+r("ETH (gas)",f(eth,5))+r("VELA in wallet",f(vbal,2))+r("USDG",fq(u,2))+r("Staked + rewards",f(gTot,2)+" VELA")+r("Rewards earned","+"+f(gRw,4)+" VELA")+r("Creator fees to claim",fq(fees,4)+" USDG")+'<h2 style="margin:18px 0 4px">Your tokens</h2><div id="pft"><div class="mu">Loading…</div></div>';loadHoldings();
   }catch(e){el.innerHTML='<div class="mu">Could not load your portfolio. Try again.</div>'}
 }
+async function loadHoldings(){
+  var box=$("pft");if(!box)return;
+  if(!ok(C.FACTORY)){box.innerHTML='<div class="mu">None yet.</div>';return}
+  try{
+    var list=await listTokens(50),bs=await Promise.all(list.map(function(v){return new ethers.Contract(v.token,ERC,ro).balanceOf(addr)})),ms=await Promise.all(list.map(metaOf)),rows=[];
+    list.forEach(function(v,k){if(bs[k].gt(0))rows.push({v:v,b:bs[k],m:ms[k]})});
+    box.innerHTML=rows.length?rows.map(function(x){return '<div class="pos"><div style="display:flex;align-items:center;gap:12px">'+imgTag(x.m,40,x.v.symbol)+'<div><b>'+esc(x.v.name)+'</b> <span class="mu">'+esc(x.v.symbol)+'</span><div class="mu">'+f(x.b,2)+' '+esc(x.v.symbol)+'</div></div></div><button class="btn s" data-view="'+x.v.token+'">View</button></div>'}).join(""):'<div class="mu">No launched tokens in your wallet yet.</div>';
+  }catch(e){box.innerHTML='<div class="mu">Could not load tokens: '+esc(er(e))+'</div>'}
+}
+$("pf").onclick=function(e){var v=e.target.dataset.view;if(v)showToken(v)};
 $("pl").onclick=function(){ef="mine";document.querySelectorAll("#ef button").forEach(function(x){x.classList.toggle("on",x.dataset.f==="mine")});document.querySelector('.bnav [data-t="explore"]').click()};
 $("pcl").onclick=function(){$("cc").click()};
 $("fa").onclick=function(e){e.preventDefault();document.querySelector('.bnav [data-t="info"]').click()};
