@@ -184,13 +184,13 @@ var STK=["function pools(uint256) view returns (uint32 lockDays,uint16 aprBps)",
 var FAC=["function fee() view returns (uint256)","function createToken(string,string,string,uint256) payable returns (address)","function createdBlock(address) view returns (uint256)","function curves(address) view returns (uint256 vQ,uint256 vT,uint256 sold,bool graduated)","function previewBuy(address,uint256) view returns (uint256 out,uint256 spend)","function previewSell(address,uint256) view returns (uint256)","function buy(address,uint256,uint256)","function sell(address,uint256,uint256)","function fees(address) view returns (uint256)","function claimFees()","function volume(address) view returns (uint256)","function tokenCount() view returns (uint256)","function tokens(uint256) view returns (address)","function tokensOf(address) view returns (address[])","function creatorOf(address) view returns (address)","function graduatedCount() view returns (uint256)","function totalVolume() view returns (uint256)","event Trade(address indexed token,address indexed who,bool isBuy,uint256 quoteAmt,uint256 tokenAmt)","event TokenCreated(address indexed creator,address indexed token,string name,string symbol)","event TokenMeta(address indexed token,string meta)"];
 var NAMES=["Flex","30 days","90 days"];
 var $=function(i){return document.getElementById(i)},U=ethers.utils;
-var ro=new ethers.providers.JsonRpcProvider(CH.rpc,{chainId:4663,name:"robinhood"});
+var ro=new ethers.providers.StaticJsonRpcProvider(CH.rpc,{chainId:4663,name:"robinhood"}),roPub=ro;
 var prov,signer,addr,sel=0,wallets=[],busy=false,pd=[null,null,null],vbal=ethers.constants.Zero,fee=null;
 var ok=function(a){return U.isAddress(a)};
 var f=function(v,d){return Number(U.formatUnits(v,18)).toLocaleString("en-US",{maximumFractionDigits:d===undefined?4:d})};
 var esc=function(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
 function toast(t,e){var m=$("msg");m.textContent=t;m.style.color=e?"var(--rd)":"var(--mu)"}
-function er(e){if(e&&(e.code===4001||e.code==="ACTION_REJECTED"))return "Rejected in wallet.";var m=e&&(e.reason||(e.error&&e.error.message)||e.message)||"Something went wrong.";return m.slice(0,160)}
+function er(e){if(e&&(e.code===4001||e.code==="ACTION_REJECTED"))return "Rejected in wallet.";if(e&&/could not detect network|missing response|NETWORK_ERROR|SERVER_ERROR/i.test((e.reason||"")+(e.message||"")))return "Cannot reach Robinhood Chain RPC. Connect your wallet, check your internet, or try another network.";var m=e&&(e.reason||(e.error&&e.error.message)||e.message)||"Something went wrong.";return m.slice(0,160)}
 async function run(fn){if(busy)return;busy=true;try{await fn()}catch(e){toast(er(e),1)}busy=false}
 
 window.addEventListener("eip6963:announceProvider",function(e){var d=e.detail;if(!wallets.some(function(w){return w.info.uuid===d.info.uuid}))wallets.push(d)});
@@ -209,7 +209,7 @@ async function connect(eth){
   await run(async function(){
     var a=await eth.request({method:"eth_requestAccounts"});
     await ensureChain(eth);
-    prov=new ethers.providers.Web3Provider(eth);signer=prov.getSigner();addr=a[0];
+    prov=new ethers.providers.Web3Provider(eth);signer=prov.getSigner();addr=a[0];ro=prov;
     if(eth.on){eth.on("accountsChanged",function(){location.reload()});eth.on("chainChanged",function(){location.reload()})}
     $("cn").textContent=addr.slice(0,6)+"…"+addr.slice(-4);
     toast("");await load();
@@ -467,7 +467,7 @@ $("fa").onclick=function(e){e.preventDefault();document.querySelector('.bnav [da
 var X_URL="https://x.com/VelaonRH";
 var CA_DEFAULT="0x49aa33d8df16d88adfa97ab2af395bddf10f814e";
 function renderCA(){
-  $("fx").href=X_URL;var el=$("fca"),a=ok(C.VELA)?C.VELA:CA_DEFAULT,label="CA: "+a.slice(0,6)+"\u2026"+a.slice(-4)+" \u00b7 Tap to copy";
+  $("fx").href=X_URL;var el=$("fca"),a=ok(C.VELA)?C.VELA:CA_DEFAULT,label=" "+a.slice(0,6)+"\u2026"+a.slice(-4)+" \u00b7 Tap to copy";
   el.textContent=label;el.classList.add("on");
   el.onclick=function(){var done=function(){el.textContent="Copied \u2713";setTimeout(function(){el.textContent=label},1500)};try{navigator.clipboard.writeText(a).then(done,function(){el.textContent=a})}catch(x){el.textContent=a}};
 }
